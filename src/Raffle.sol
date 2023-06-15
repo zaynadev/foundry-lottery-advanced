@@ -140,8 +140,16 @@ contract Raffle is VRFConsumerBaseV2 {
 
     /** Getter Functions */
 
+    function getRaffleState() public view returns (RaffleState) {
+        return s_raffleState;
+    }
+
     function getNumWords() public pure returns (uint256) {
         return NUM_WORDS;
+    }
+
+    function getRecentWinner() public view returns (address) {
+        return s_recentWinner;
     }
 
     function getPlayer(uint256 index) public view returns (address) {

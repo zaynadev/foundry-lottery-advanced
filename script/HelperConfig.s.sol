@@ -6,7 +6,7 @@ import {VRFCoordinatorV2Mock} from "../test/mocks/VRFCoordinatorV2Mock.sol";
 import {LinkToken} from "../test/mocks/LinkToken.sol";
 import {Script} from "forge-std/Script.sol";
 
-contract DeployRaffle is Script {
+contract HelperConfig is Script {
     NetworkConfig public activeNetworkConfig;
 
     struct NetworkConfig {
@@ -54,7 +54,7 @@ contract DeployRaffle is Script {
         public
         returns (NetworkConfig memory anvilNetworkConfig)
     {
-         // Check to see if we set an active network config
+        // Check to see if we set an active network config
         if (activeNetworkConfig.vrfCoordinatorV2 != address(0)) {
             return activeNetworkConfig;
         }
@@ -85,6 +85,5 @@ contract DeployRaffle is Script {
             link: address(link),
             deployerKey: DEFAULT_ANVIL_PRIVATE_KEY
         });
-    }
     }
 }

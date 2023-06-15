@@ -7,7 +7,7 @@ import {Raffle} from "../../src/Raffle.sol";
 import {DeployRaffle} from "../../script/DeployRaffle.s.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
 
-contract RaffleTest {
+contract RaffleTest is Test {
     Raffle raffle;
     HelperConfig helperConfig;
     uint64 subscriptionId;
@@ -21,9 +21,14 @@ contract RaffleTest {
     address public PLAYER = makeAddr("player");
     uint public constant STARTING_USER_BALANCE = 10 ether;
 
+    /** Events */
+    event EnteredRaffle(address indexed player);
+    event WinnerPicked(address indexed winner);
+
     function setUp() external {
         DeployRaffle deployRaflle = new DeployRaffle();
         (raffle, helperConfig) = deployRaflle.run();
+        vm.deal(PLAYER, STARTING_USER_BALANCE);
         (
             subscriptionId,
             gasLane,
@@ -48,7 +53,31 @@ contract RaffleTest {
         // Arrange
         vm.prank(PLAYER);
         // Act / Assert
-        vm.expectRevert(Raffle.Raffle__SendMoreToEnterRaffle.selector);
+        vm.expectRevert(Raffle.Raffle__NotEnoughEthSent.selector);
         raffle.enterRaffle();
+    }
+
+    function testEmitsEventOnEntrance() public {
+        // Arrange
+        vm.prank(PLAYER);
+
+        // Act / Assert
+        vm.expectEmit(true, false, false, false, address(raffle));
+        emit EnteredRaffle(PLAYER);
+        raffle.enterRaffle{value: raffleEntranceFee}();
+    }
+
+    function testDontAllowPlayersToEnterWhileRaffleIsCalculating() public {
+        // Arrange
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: raffleEntranceFee}();
+        vm.warp(block.timestamp + automationUpdateInterval + 1);
+        vm.roll(block.number + 1);
+        raffle.performUpkeep("");
+
+        // Act / Assert
+        vm.expectRevert(Raffle.Raffle__RaffleNotOpen.selector);
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: raffleEntranceFee}();
     }
 }
